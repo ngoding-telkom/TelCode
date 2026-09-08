@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import { listProblems } from '@/services/problem.services.ts'
+import { findAllTags } from '@/repositories/tag.repository'
 
 export async function GET() {
   try {
-    const problems = await listProblems()
-    return NextResponse.json({ data: problems })
+    const data = await findAllTags()
+    return NextResponse.json({ data })
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Unknown error' },
