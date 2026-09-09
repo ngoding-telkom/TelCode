@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/middlewares/auth.middleware'
+import { getAuthenticatedUser, UnauthorizedError } from '@/middlewares/auth.middleware'
 import { submitSolution, listUserSubmissions } from '@/services/submission.service'
 
 export async function POST(req: Request) {
@@ -9,7 +9,8 @@ export async function POST(req: Request) {
     const result = await submitSolution(user.id, problemId, languageId, code)
     return NextResponse.json({ data: result })
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 400 })
+    const status = err instanceof UnauthorizedError ? 401 : 400
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status })
   }
 }
 
@@ -20,6 +21,7 @@ export async function GET(req: Request) {
     const submissions = await listUserSubmissions(user.id, problemId)
     return NextResponse.json({ data: submissions })
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status: 400 })
+    const status = err instanceof UnauthorizedError ? 401 : 400
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Unknown error' }, { status })
   }
 }

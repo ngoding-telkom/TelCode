@@ -1,6 +1,6 @@
 // src/config/supabase-server.ts
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/models/database.types'
+import type { Database } from '@/types/database.types'
 
 // HANYA diimpor di dalam file route.ts (server-side).
 // Jangan pernah impor file ini di komponen yang punya 'use client'.

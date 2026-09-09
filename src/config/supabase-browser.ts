@@ -1,6 +1,6 @@
 // src/config/supabase-browser.ts
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/models/database.types'
+import type { Database } from '@/types/database.types'
 
 // Aman diimpor di komponen 'use client'.
 // Key ini memang ditujukan untuk terlihat oleh browser.

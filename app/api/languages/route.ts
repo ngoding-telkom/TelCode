@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { findAllLanguages } from '@/repositories/language.repository'
+import { findAllLanguages } from '@/repositories/languages.repository'
 
 export async function GET() {
   try {

@@ -1,4 +1,4 @@
-import { supabaseServer } from '../config/supabase-server.ts'
+import { supabaseServer } from '@/config/supabase-server'
 
 export async function findProblemBySlug(slug: string) {
   const { data, error } = await supabaseServer

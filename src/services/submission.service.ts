@@ -4,25 +4,56 @@ import { saveSubmissionResults, findResultsBySubmission } from '@/repositories/s
 import { executionService } from '@/services/execution'
 
 export async function submitSolution(userId: string, problemId: string, languageId: number, code: string) {
-  const submission = await createSubmission(userId, problemId, languageId, code)
-  const testCases = await findAllTestCases(problemId) // hidden test case, hanya dari sini
-
-  const results = []
-  for (const tc of testCases) {
-    const result = await executionService.runTestCase(code, 'javascript', tc.input)
-    results.push({
-      testCaseId: tc.id,
-      passed: result.actualOutput.trim() === tc.expected_output.trim(),
-      actualOutput: result.actualOutput,
-      runtimeMs: result.runtimeMs,
-    })
+  if (
+    typeof userId !== 'string' ||
+    !userId ||
+    typeof problemId !== 'string' ||
+    !problemId ||
+    !Number.isInteger(languageId) ||
+    languageId < 1
+  ) {
+    throw new Error('Invalid submission metadata')
+  }
+  if (typeof code !== 'string' || !code.trim() || code.length > 100_000) {
+    throw new Error('Code must be non-empty and no longer than 100000 characters')
+  }
+  if (languageId !== 1) {
+    throw new Error('This execution service currently supports JavaScript only')
   }
 
-  await saveSubmissionResults(submission.id, results)
-  const verdict = results.every(r => r.passed) ? 'accepted' : 'wrong_answer'
-  await updateSubmissionStatus(submission.id, verdict)
+  const submission = await createSubmission(userId, problemId, languageId, code)
+  try {
+    const testCases = await findAllTestCases(problemId)
+    if (testCases.length === 0) {
+      throw new Error('Problem has no test cases')
+    }
 
-  return { submissionId: submission.id, verdict, results }
+    const results = []
+    let hasExecutionError = false
+    for (const tc of testCases) {
+      const result = await executionService.runTestCase(code, 'javascript', tc.input)
+      hasExecutionError ||= result.hadError
+      results.push({
+        testCaseId: tc.id,
+        passed: !result.hadError && result.actualOutput.trim() === tc.expected_output.trim(),
+        actualOutput: result.hadError ? (result.errorMessage ?? '') : result.actualOutput,
+        runtimeMs: result.runtimeMs,
+      })    
+    }
+
+    await saveSubmissionResults(submission.id, results)
+    const verdict = hasExecutionError
+      ? 'runtime_error'
+      : results.every(r => r.passed)
+        ? 'accepted'
+        : 'wrong_answer'
+    await updateSubmissionStatus(submission.id, verdict)
+
+    return { submissionId: submission.id, verdict, results }
+  } catch (error) {
+    await updateSubmissionStatus(submission.id, 'failed')
+    throw error
+  }
 }
 
 export async function listUserSubmissions(userId: string, problemId?: string) {
