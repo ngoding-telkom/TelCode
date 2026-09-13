@@ -1,4 +1,4 @@
-import { LanguageCatalog } from "./frontend/presentation/components/language-catalog";
+import { LanguageCatalog } from "./presentation/components/language-catalog";
 
 export default function Home() {
   return (
